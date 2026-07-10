@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>한국투자 MTS 연금 서비스 모니터링 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --slate-700: #334155;
+      --slate-500: #64748b;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --green: #16a34a;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--navy-900);
+    }
+
+    .layout {
+      display: block;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    aside {
+      background: var(--navy-900);
+      color: white;
+      padding: 28px 20px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    .logo {
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 28px;
+    }
+
+    .logo span {
+      display: block;
+      color: #93c5fd;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+
+    .sidebar-filters {
+      display: grid;
+      gap: 9px;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .sidebar-filters-title {
+      display: grid;
+      gap: 3px;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-filters-title strong {
+      font-size: 13px;
+      color: white;
+    }
+
+    .sidebar-filters-title span {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .sidebar-filters select,
+    .sidebar-filters button {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(15, 23, 42, 0.72);
+      color: white;
+      padding: 10px 11px;
+      border-radius: 11px;
+      font-size: 13px;
+      box-shadow: none;
+    }
+
+    .sidebar-filters select option {
+      color: var(--navy-900);
+    }
+
+    .sidebar-filters button {
+      cursor: pointer;
+      font-weight: 700;
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    nav { display: grid; gap: 8px; }
+
+    nav button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      border-radius: 12px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    nav button.active,
+    nav button:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    main {
+      padding: 28px;
+      margin-left: 260px;
+      overflow-x: hidden;
+      min-width: 0;
+      width: calc(100% - 260px);
+      max-width: calc(100vw - 260px);
+    }
+
+    section[id] {
+      scroll-margin-top: 28px;
+    }
+
+    .visit-data-table {
+      margin-top: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--slate-500);
+      font-size: 14px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    select,
+    button.filter {
+      border: 1px solid var(--slate-200);
+      background: var(--white);
+      color: var(--navy-900);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .grid-kpi.mp-kpi {
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .kpi { padding: 18px; }
+
+    .kpi-label {
+      color: var(--slate-500);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+
+    .kpi-change {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .up { color: var(--green); }
+    .down { color: var(--red); }
+    .neutral { color: var(--slate-500); }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .section { padding: 20px; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.03em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .chart-box {
+      height: 300px;
+      position: relative;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    canvas {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    .chart-box.tall {
+      height: 360px;
+    }
+
+    .table-card { overflow: hidden; }
+
+    .table-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--slate-200);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--slate-500);
+      font-size: 12px;
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .rank {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      background: var(--slate-100);
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .screen-area {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .screen-list { padding: 12px; }
+
+    .screen-list button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 13px 12px;
+      text-align: left;
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--slate-700);
+      font-size: 14px;
+    }
+
+    .screen-list button.active {
+      background: var(--navy-900);
+      color: white;
+      font-weight: 700;
+    }
+
+    .mini-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .mini-kpi {
+      background: #f8fafc;
+      border: 1px solid var(--slate-200);
+      border-radius: 14px;
+      padding: 13px;
+    }
+
+    .mini-kpi span {
+      display: block;
+      color: var(--slate-500);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .mini-kpi strong { font-size: 18px; }
+
+    .mini-kpi .metric-delta {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 7px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-kpi .metric-delta.up {
+      color: var(--blue);
+    }
+
+    .mini-kpi .metric-delta.down {
+      color: var(--slate-500);
+    }
+
+    .mini-kpi .metric-delta.neutral {
+      color: var(--slate-500);
+    }
+
+    .mini-kpi .delta-caption {
+      display: block;
+      margin-top: 2px;
+      color: var(--slate-500);
+      font-size: 11px;
+    }
+
+    .rebalance-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .rebalance-summary .mini-kpi {
+      background: #f8fafc;
+    }
+
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .heat-item {
+      border: 1px solid var(--slate-200);
+      border-radius: 14px;
+      padding: 14px;
+      background: #f8fafc;
+    }
+
+    .bar-bg {
+      height: 10px;
+      background: var(--slate-200);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .bar {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 999px;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+      min-width: 0;
+    }
+
+    .flow-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin: 0 0 10px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .green-bg { background: var(--green); }
+    .orange-bg { background: var(--orange); }
+    .red-bg { background: var(--red); }
+
+    .footer-note {
+      color: var(--slate-500);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: var(--slate-200);
+      margin: 20px 0;
+    }
+
+
+    .filter-panel {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 14px;
+      border: 1px solid var(--slate-200);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    th.sortable::after {
+      content: "↕";
+      margin-left: 6px;
+      color: var(--slate-300);
+      font-size: 11px;
+    }
+
+    th.sortable.sort-asc::after {
+      content: "↑";
+      color: var(--blue);
+    }
+
+    th.sortable.sort-desc::after {
+      content: "↓";
+      color: var(--blue);
+    }
+
+    .filter-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .filter-subtitle {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--slate-500);
+      margin: 0;
+    }
+
+    .check-grid.balance {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-panel-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--slate-700);
+      margin: 0;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 9px;
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+      background: white;
+      font-size: 13px;
+      color: var(--slate-700);
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .check-item input {
+      margin: 0;
+    }
+
+    .filter-summary {
+      font-size: 12px;
+      color: var(--slate-500);
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .single-wide {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mp-section {
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .mp-kpi.in-card {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 18px;
+    }
+
+    .mp-kpi.in-card .kpi {
+      border: 1px solid var(--slate-200);
+      background: #f8fafc;
+      border-radius: 14px;
+      box-shadow: none;
+      min-width: 0;
+    }
+
+
+    @media (max-width: 1200px) {
+      .layout { display: block; }
+
+      aside {
+        position: sticky;
+        left: auto;
+        top: 0;
+        width: 100%;
+        height: auto;
+        padding: 18px;
+        z-index: 20;
+      }
+
+      main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      nav {
+        display: flex;
+        overflow-x: auto;
+      }
+
+      nav button { white-space: nowrap; }
+
+      .grid-kpi,
+      .grid-kpi.mp-kpi,
+      .mp-kpi.in-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      .dashboard-grid,
+      .screen-area,
+      .flow-grid { grid-template-columns: 1fr; }
+
+      .check-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+      .mini-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 720px) {
+      main { padding: 18px; }
+
+      .topbar { flex-direction: column; }
+
+      .sidebar-filters {
+        grid-template-columns: 1fr auto auto auto;
+        align-items: center;
+      }
+
+      .sidebar-filters-title {
+        margin-bottom: 0;
+      }
+
+      .sidebar-filters select,
+      .sidebar-filters button {
+        width: auto;
+        min-width: 112px;
+      }
+
+      .filters { justify-content: flex-start; }
+
+      .grid-kpi,
+      .grid-kpi.mp-kpi,
+      .mp-kpi.in-card,
+      .mini-kpi-grid,
+      .rebalance-summary,
+      .heatmap { grid-template-columns: 1fr; }
+
+      .chart-box,
+      .chart-box.tall {
+        height: 260px;
+      }
+
+      .sidebar-filters {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-filters select,
+      .sidebar-filters button {
+        width: 100%;
+      }
+
+      .check-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      .table-scroll { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="logo">
+        연금 서비스<br />모니터링 대시보드
+        <span>Korea Investment MTS</span>
+      </div>
+
+      <div class="sidebar-filters">
+        <div class="sidebar-filters-title">
+          <strong>조회 조건</strong>
+          <span>모든 지표와 테이블에 공통 적용</span>
+        </div>
+
+        <select id="periodSelect">
+          <option>오늘</option>
+          <option>최근 7일</option>
+          <option>최근 30일</option>
+          <option>직접 선택</option>
+        </select>
+
+        <select id="unitSelect">
+          <option>시간 단위</option>
+          <option>일 단위</option>
+          <option>주 단위</option>
+          <option>월 단위</option>
+        </select>
+
+        <button type="button" id="refreshBtn">새로고침</button>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" data-target="overview">전체 현황</button>
+        <button class="nav-btn" data-target="visit">방문 분석</button>
+        <button class="nav-btn" data-target="menu">메뉴 분석</button>
+        <button class="nav-btn" data-target="screen">화면 분석</button>
+        <button class="nav-btn" data-target="account">계좌 개설</button>
+        <button class="nav-btn" data-target="mp">MP 지표</button>
+        <button class="nav-btn" data-target="error">오류 모니터링</button>
+      </nav>
+    </aside>
+
+    <main>
+      <section id="overview">
+        <div class="topbar">
+          <div>
+            <h1>한국투자 MTS 연금 서비스 운영 현황</h1>
+            <p class="subtitle">방문, 거래, 계좌개설, MP구독포트폴리오, 오류 데이터를 한 화면에서 모니터링합니다.</p>
+          </div>
+        </div>
+
+        <div class="grid-kpi">
+          <div class="card kpi">
+            <div class="kpi-label">전체 방문 UV</div>
+            <div class="kpi-value">42,351</div>
+            <div class="kpi-change up">▲ 8.2%</div>
+          </div>
+          <div class="card kpi">
+            <div class="kpi-label">전체 PV</div>
+            <div class="kpi-value">138,902</div>
+            <div class="kpi-change up">▲ 12.5%</div>
+          </div>
+          <div class="card kpi">
+            <div class="kpi-label">전체 고객 대비 방문율</div>
+            <div class="kpi-value">2.19%</div>
+            <div class="kpi-change neutral">전일 유사</div>
+          </div>
+          <div class="card kpi">
+            <div class="kpi-label">실시간 거래건수</div>
+            <div class="kpi-value">3,842</div>
+            <div class="kpi-change up">▲ 5.7%</div>
+          </div>
+          <div class="card kpi">
+            <div class="kpi-label">계좌 개설</div>
+            <div class="kpi-value">714</div>
+            <div class="kpi-change up">▲ 16.4%</div>
+          </div>
+          <div class="card kpi">
+            <div class="kpi-label">오류율</div>
+            <div class="kpi-value">0.18%</div>
+            <div class="kpi-change down">▼ 0.03%p</div>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="visit" class="dashboard-grid">
+        <div class="card section">
+          <div class="section-header">
+            <h2 class="section-title">전체 앱 방문 UV/PV · 연금고객 방문 흐름</h2>
+            <span class="badge">전체 연금고객수 / 앱 방문고객 포함</span>
+          </div>
+          <div class="chart-box tall">
+            <canvas id="visitChart"></canvas>
+          </div>
+
+          <div class="visit-data-table table-scroll">
+            <table id="visitDataTable">
+              <thead>
+                <tr>
+                  <th>시간</th>
+                  <th>전체 앱 UV</th>
+                  <th>전체 앱 PV</th>
+                  <th>전체 연금고객수</th>
+                  <th>연금고객 중 앱 방문고객</th>
+                  <th>전체 앱 UV 대비 연금 방문고객</th>
+                </tr>
+              </thead>
+              <tbody id="visitDataBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="section-header">
+            <h2 class="section-title">연령대별 방문 비중</h2>
+            <span class="badge">계좌 보유 필터</span>
+          </div>
+
+          <div class="filter-panel">
+            <p class="filter-panel-title">연금 계좌별 보유 필터</p>
+
+            <div class="filter-group">
+              <p class="filter-subtitle">계좌 보유 조건</p>
+              <div class="check-grid" id="ageAccountFilters">
+                <label class="check-item"><input type="checkbox" value="IRP" checked /> IRP</label>
+                <label class="check-item"><input type="checkbox" value="연금저축" checked /> 연금저축</label>
+                <label class="check-item"><input type="checkbox" value="DC" checked /> DC</label>
+                <label class="check-item"><input type="checkbox" value="위탁" checked /> 위탁</label>
+                <label class="check-item"><input type="checkbox" value="CMA" checked /> CMA</label>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <p class="filter-subtitle">잔고 상태 조건</p>
+              <div class="check-grid balance" id="ageBalanceFilters">
+                <label class="check-item"><input type="checkbox" value="유잔고" checked /> 유잔고</label>
+                <label class="check-item"><input type="checkbox" value="무잔고" checked /> 무잔고</label>
+              </div>
+            </div>
+
+            <p class="filter-summary" id="ageFilterSummary">전체 계좌 보유 고객 기준으로 연령 분포를 표시합니다.</p>
+          </div>
+
+          <div class="chart-box tall">
+            <canvas id="ageChart"></canvas>
+          </div>
+
+          <div class="visit-data-table table-scroll">
+            <table id="ageDataTable">
+              <thead>
+                <tr>
+                  <th>연령대</th>
+                  <th>고객 수</th>
+                  <th>구성비</th>
+                </tr>
+              </thead>
+              <tbody id="ageDataBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="menu" class="dashboard-grid single-wide">
+        <div class="card section table-card">
+          <div class="section-header">
+            <h2 class="section-title">전체 메뉴 방문 순위</h2>
+            <span class="badge">TOP 7</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>순위</th>
+                  <th>메뉴</th>
+                  <th>UV</th>
+                  <th>PV</th>
+                  <th>CTR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="rank">1</span></td><td>연금 홈</td><td>24,102</td><td>71,330</td><td>38.5%</td></tr>
+                <tr><td><span class="rank">2</span></td><td>총 연금자산</td><td>18,942</td><td>52,181</td><td>31.2%</td></tr>
+                <tr><td><span class="rank">3</span></td><td>ETF 주문</td><td>13,820</td><td>38,902</td><td>24.6%</td></tr>
+                <tr><td><span class="rank">4</span></td><td>연금상품</td><td>12,447</td><td>30,118</td><td>21.1%</td></tr>
+                <tr><td><span class="rank">5</span></td><td>ETF 잔고</td><td>9,108</td><td>22,604</td><td>18.8%</td></tr>
+                <tr><td><span class="rank">6</span></td><td>MP구독포트폴리오</td><td>7,690</td><td>18,441</td><td>15.3%</td></tr>
+                <tr><td><span class="rank">7</span></td><td>연금 가져오기</td><td>6,810</td><td>14,991</td><td>12.7%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen" class="screen-area">
+        <div class="card screen-list">
+          <button class="screen-btn active" data-screen="연금 홈">연금 홈</button>
+          <button class="screen-btn" data-screen="연금상품">연금상품</button>
+          <button class="screen-btn" data-screen="총 연금자산">총 연금자산</button>
+          <button class="screen-btn" data-screen="ETF 주문">ETF 주문</button>
+          <button class="screen-btn" data-screen="ETF 잔고">ETF 잔고</button>
+          <button class="screen-btn" data-screen="연금 가져오기">연금 가져오기</button>
+          <button class="screen-btn" data-screen="연금 계좌개설">연금 계좌개설</button>
+          <button class="screen-btn" data-screen="MP구독포트폴리오">MP구독포트폴리오</button>
+        </div>
+
+        <div class="card section">
+          <div class="section-header">
+            <h2 class="section-title"><span id="selectedScreen">연금 홈</span> 화면 사용 행태</h2>
+            <span class="badge">화면별 상세</span>
+          </div>
+
+          <div class="mini-kpi-grid">
+            <div class="mini-kpi">
+              <span>UV</span><strong id="screenUv">24,102</strong>
+              <em id="screenUvDelta" class="metric-delta up">▲ +8.2%</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+            <div class="mini-kpi">
+              <span>PV</span><strong id="screenPv">71,330</strong>
+              <em id="screenPvDelta" class="metric-delta up">▲ +11.4%</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+            <div class="mini-kpi">
+              <span>CTR</span><strong id="screenCtr">38.5%</strong>
+              <em id="screenCtrDelta" class="metric-delta down">▼ -1.1%p</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+            <div class="mini-kpi">
+              <span>평균 체류시간</span><strong id="screenTime">01:42</strong>
+              <em id="screenTimeDelta" class="metric-delta up">▲ +12초</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+            <div class="mini-kpi">
+              <span>이탈률</span><strong id="screenBounce">21.4%</strong>
+              <em id="screenBounceDelta" class="metric-delta up">▼ -2.3%p</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+            <div class="mini-kpi">
+              <span>클릭수</span><strong id="screenClicks">18,902</strong>
+              <em id="screenClicksDelta" class="metric-delta up">▲ +9.8%</em>
+              <small class="delta-caption">전일 동시간 대비</small>
+            </div>
+          </div>
+
+          <h3 class="section-title" style="margin-bottom:12px;">주요 클릭 영역</h3>
+          <div id="clickHeatmap" class="heatmap"></div>
+
+          <div class="section-divider"></div>
+
+          <div class="flow-grid">
+            <div>
+              <p class="flow-title">이전 화면 TOP</p>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>순위</th>
+                      <th>이전 화면</th>
+                      <th>빈도</th>
+                      <th>비중</th>
+                    </tr>
+                  </thead>
+                  <tbody id="prevFlowBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <p class="flow-title">다음 화면 TOP</p>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>순위</th>
+                      <th>다음 화면</th>
+                      <th>빈도</th>
+                      <th>비중</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nextFlowBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="account" class="dashboard-grid single-wide">
+        <div class="card section">
+          <div class="section-header">
+            <h2 class="section-title">개인연금저축 · IRP 계좌 개설 실적</h2>
+            <span class="badge">전환율 포함</span>
+          </div>
+          <div class="chart-box">
+            <canvas id="accountChart"></canvas>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="section-header">
+            <h3 class="section-title">계좌개설 후속 행동</h3>
+            <span class="badge">개설 직후 행동</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>계좌개설 수</th>
+                  <th>개설 직후 입금율</th>
+                  <th>첫 거래까지 평균 소요시간</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>IRP</td>
+                  <td>642</td>
+                  <td>38.4%</td>
+                  <td>1일 7시간</td>
+                  <td>개설 당일 입금 비중 높음</td>
+                </tr>
+                <tr>
+                  <td>개인연금저축</td>
+                  <td>484</td>
+                  <td>42.7%</td>
+                  <td>18시간 24분</td>
+                  <td>ETF 주문 연결 비중 높음</td>
+                </tr>
+                <tr>
+                  <td>전체</td>
+                  <td>1,126</td>
+                  <td>40.2%</td>
+                  <td>1일 2시간</td>
+                  <td>입금 후 첫 거래 전환율 31.8%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="mp" class="card section mp-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">MP구독포트폴리오 운영 지표</h2>
+            <p class="subtitle" style="margin-top:6px;">신청고객, 총 가입 고객수, 리밸런싱 제안 도달 및 실행 흐름을 한 박스에서 확인합니다.</p>
+          </div>
+          <span class="badge">MP 지표</span>
+        </div>
+
+        <div class="grid-kpi mp-kpi in-card">
+          <div class="kpi">
+            <div class="kpi-label">MP구독포트폴리오 신청고객</div>
+            <div class="kpi-value">1,284</div>
+            <div class="kpi-change up">▲ 9.8%</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">현재 총 가입 고객수</div>
+            <div class="kpi-value">28,450</div>
+            <div class="kpi-change up">▲ 1.6%</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">리밸런싱 제안 도달율</div>
+            <div class="kpi-value">64.2%</div>
+            <div class="kpi-change up">▲ 3.1%p</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">리밸런싱 실행율</div>
+            <div class="kpi-value">27.8%</div>
+            <div class="kpi-change up">▲ 2.4%p</div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <canvas id="mpChart"></canvas>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="section-header">
+          <h3 class="section-title">최근 4회 리밸런싱 제안 이력</h3>
+          <span class="badge">분기 1회 · 월말 발송</span>
+        </div>
+
+        <div class="rebalance-summary">
+          <div class="mini-kpi">
+            <span>최근 4회 평균 도달율</span>
+            <strong>95.3%</strong>
+            <em class="metric-delta up">▲ +1.4%p</em>
+            <small class="delta-caption">직전 4회 평균 대비</small>
+          </div>
+          <div class="mini-kpi">
+            <span>최근 4회 평균 실행율</span>
+            <strong>26.5%</strong>
+            <em class="metric-delta up">▲ +1.8%p</em>
+            <small class="delta-caption">직전 4회 평균 대비</small>
+          </div>
+          <div class="mini-kpi">
+            <span>최고 실행 회차</span>
+            <strong>2026 2Q</strong>
+            <em class="metric-delta neutral">28.2%</em>
+            <small class="delta-caption">2026-06-30 제안</small>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>제안일</th>
+                <th>회차</th>
+                <th>대상고객</th>
+                <th>도달고객</th>
+                <th>도달율</th>
+                <th>실행고객</th>
+                <th>실행율</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-06-30</td>
+                <td>2026 2Q</td>
+                <td>31,820</td>
+                <td>30,954</td>
+                <td>97.3%</td>
+                <td>8,964</td>
+                <td>28.2%</td>
+              </tr>
+              <tr>
+                <td>2026-03-31</td>
+                <td>2026 1Q</td>
+                <td>29,612</td>
+                <td>28,475</td>
+                <td>96.2%</td>
+                <td>8,115</td>
+                <td>27.4%</td>
+              </tr>
+              <tr>
+                <td>2025-12-31</td>
+                <td>2025 4Q</td>
+                <td>27,184</td>
+                <td>25,782</td>
+                <td>94.8%</td>
+                <td>7,051</td>
+                <td>25.9%</td>
+              </tr>
+              <tr>
+                <td>2025-09-30</td>
+                <td>2025 3Q</td>
+                <td>24,913</td>
+                <td>23,104</td>
+                <td>92.7%</td>
+                <td>6,108</td>
+                <td>24.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="error" class="dashboard-grid">
+        <div class="card section table-card">
+          <div class="section-header">
+            <h2 class="section-title">오류 발생 현황</h2>
+            <span class="badge"><span class="status-dot green-bg"></span> 정상</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>시간</th>
+                  <th>화면</th>
+                  <th>API</th>
+                  <th>오류율</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>13:00</td><td>ETF 주문</td><td>/pension/order</td><td>0.31%</td><td><span class="status-dot orange-bg"></span>주의</td></tr>
+                <tr><td>12:00</td><td>총 연금자산</td><td>/asset/summary</td><td>0.14%</td><td><span class="status-dot green-bg"></span>정상</td></tr>
+                <tr><td>11:00</td><td>MP구독포트폴리오</td><td>/mp/rebalance</td><td>0.19%</td><td><span class="status-dot green-bg"></span>정상</td></tr>
+                <tr><td>10:00</td><td>계좌개설</td><td>/account/open</td><td>0.46%</td><td><span class="status-dot orange-bg"></span>주의</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="footer-note">※ 본 화면은 기획 검토용 샘플 데이터로 구성되었습니다.</p>
+        </div>
+
+        <div class="card section">
+          <div class="section-header">
+            <h2 class="section-title">API별 오류 발생 순위</h2>
+            <span class="badge">상위 API</span>
+          </div>
+          <div class="chart-box">
+            <canvas id="errorChart"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const chartColor = '#2563eb';
+    const navy = '#0f172a';
+    const gray = '#64748b';
+    const gridColor = '#e2e8f0';
+
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: gray,
+            usePointStyle: true,
+            boxWidth: 8
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: gray },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: gray },
+          grid: { color: gridColor }
+        }
+      }
+    };
+
+    const visitSeries = {
+      labels: ['09시', '10시', '11시', '12시', '13시', '14시', '15시', '16시'],
+      appUv: [112000, 138000, 164000, 181000, 196000, 212000, 235000, 248000],
+      appPv: [286000, 354000, 421000, 468000, 501000, 542000, 601000, 636000],
+      pensionCustomers: [1850000, 1850000, 1850000, 1850000, 1850000, 1850000, 1850000, 1850000],
+      pensionVisitCustomers: [18400, 22600, 27500, 31800, 34400, 38200, 42100, 45800]
+    };
+
+    new Chart(document.getElementById('visitChart'), {
+      type: 'line',
+      data: {
+        labels: visitSeries.labels,
+        datasets: [
+          {
+            label: '전체 앱 UV',
+            data: visitSeries.appUv,
+            borderColor: chartColor,
+            backgroundColor: 'rgba(37, 99, 235, 0.10)',
+            fill: true,
+            tension: 0.35,
+            yAxisID: 'y'
+          },
+          {
+            label: '전체 앱 PV',
+            data: visitSeries.appPv,
+            borderColor: navy,
+            backgroundColor: 'rgba(15, 23, 42, 0.04)',
+            fill: true,
+            tension: 0.35,
+            yAxisID: 'y'
+          },
+          {
+            label: '전체 연금고객수',
+            data: visitSeries.pensionCustomers,
+            borderColor: '#64748b',
+            borderDash: [6, 6],
+            pointRadius: 0,
+            tension: 0.1,
+            yAxisID: 'y1'
+          },
+          {
+            label: '연금고객 중 앱 방문고객',
+            data: visitSeries.pensionVisitCustomers,
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22, 163, 74, 0.08)',
+            fill: false,
+            tension: 0.35,
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: { color: gray, usePointStyle: true, boxWidth: 8 }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: gray },
+            grid: { display: false }
+          },
+          y: {
+            position: 'left',
+            ticks: {
+              color: gray,
+              callback: value => value.toLocaleString()
+            },
+            grid: { color: gridColor }
+          },
+          y1: {
+            position: 'right',
+            ticks: {
+              color: gray,
+              callback: value => (value / 10000).toLocaleString() + '만'
+            },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    function renderVisitDataTable() {
+      const body = document.getElementById('visitDataBody');
+      if (!body) return;
+      body.innerHTML = visitSeries.labels.map((label, index) => {
+        const ratio = (visitSeries.pensionVisitCustomers[index] / visitSeries.appUv[index]) * 100;
+        return `
+          <tr>
+            <td>${label}</td>
+            <td>${visitSeries.appUv[index].toLocaleString()}</td>
+            <td>${visitSeries.appPv[index].toLocaleString()}</td>
+            <td>${visitSeries.pensionCustomers[index].toLocaleString()}</td>
+            <td>${visitSeries.pensionVisitCustomers[index].toLocaleString()}</td>
+            <td>${ratio.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    renderVisitDataTable();
+
+    const ageChart = new Chart(document.getElementById('ageChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['20대', '30대', '40대', '50대', '60대 이상'],
+        datasets: [{
+          data: [9, 21, 34, 26, 10],
+          backgroundColor: ['#cbd5e1', '#93c5fd', '#2563eb', '#1e293b', '#64748b'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: gray, usePointStyle: true, boxWidth: 8 }
+          }
+        },
+        cutout: '68%'
+      }
+    });
+
+    const ageAccountData = {
+      'IRP': [7, 18, 36, 29, 10],
+      '연금저축': [12, 26, 34, 21, 7],
+      'DC': [5, 16, 38, 31, 10],
+      '위탁': [14, 31, 30, 18, 7],
+      'CMA': [18, 34, 27, 15, 6]
+    };
+
+    const accountWeights = {
+      'IRP': 1.15,
+      '연금저축': 1.05,
+      'DC': 0.95,
+      '위탁': 0.75,
+      'CMA': 0.65
+    };
+
+    const balanceStatusData = {
+      '유잔고': [6, 20, 37, 28, 9],
+      '무잔고': [18, 31, 29, 16, 6]
+    };
+
+    const balanceWeights = {
+      '유잔고': 1.1,
+      '무잔고': 0.9
+    };
+
+    function renderAgeDataTable(percentages, checkedAccounts = [], checkedBalances = []) {
+      const body = document.getElementById('ageDataBody');
+      if (!body) return;
+
+      const labels = ['20대', '30대', '40대', '50대', '60대 이상'];
+      const accountFactor = Math.max(checkedAccounts.length, 1);
+      const balanceFactor = Math.max(checkedBalances.length, 1);
+      const estimatedTotal = Math.round(42351 * (0.54 + accountFactor * 0.07 + balanceFactor * 0.04));
+
+      body.innerHTML = labels.map((label, index) => {
+        const percentage = percentages[index] || 0;
+        const count = Math.round(estimatedTotal * percentage / 100);
+        return `
+          <tr>
+            <td>${label}</td>
+            <td>${count.toLocaleString()}</td>
+            <td>${percentage.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateAgeChartByAccountFilter() {
+      const checked = Array.from(document.querySelectorAll('#ageAccountFilters input:checked')).map(input => input.value);
+      const balanceChecked = Array.from(document.querySelectorAll('#ageBalanceFilters input:checked')).map(input => input.value);
+      const summary = document.getElementById('ageFilterSummary');
+
+      if (checked.length === 0 && balanceChecked.length === 0) {
+        ageChart.data.datasets[0].data = [0, 0, 0, 0, 0];
+        summary.textContent = '선택된 조건이 없습니다. 계좌 또는 잔고 상태를 하나 이상 선택해 주세요.';
+        ageChart.update();
+        renderAgeDataTable([0, 0, 0, 0, 0], checked, balanceChecked);
+        return;
+      }
+
+      const base = [0, 0, 0, 0, 0];
+      let weightSum = 0;
+
+      checked.forEach(account => {
+        const weight = accountWeights[account] || 1;
+        weightSum += weight;
+        ageAccountData[account].forEach((value, index) => {
+          base[index] += value * weight;
+        });
+      });
+
+      balanceChecked.forEach(status => {
+        const weight = balanceWeights[status] || 1;
+        weightSum += weight;
+        balanceStatusData[status].forEach((value, index) => {
+          base[index] += value * weight;
+        });
+      });
+
+      const normalized = base.map(value => Math.round((value / weightSum) * 10) / 10);
+      const total = normalized.reduce((sum, value) => sum + value, 0);
+      const adjusted = normalized.map(value => Math.round((value / total) * 100));
+      const diff = 100 - adjusted.reduce((sum, value) => sum + value, 0);
+      adjusted[2] += diff;
+
+      ageChart.data.datasets[0].data = adjusted;
+      ageChart.update();
+      renderAgeDataTable(adjusted, checked, balanceChecked);
+
+      const pensionAccounts = checked.filter(v => ['IRP', '연금저축', 'DC'].includes(v));
+      const crossAccounts = checked.filter(v => ['위탁', 'CMA'].includes(v));
+      const balanceText = balanceChecked.length === 2 ? '유잔고/무잔고 전체' : balanceChecked.join(', ');
+
+      if (checked.length === 5 && balanceChecked.length === 2) {
+        summary.textContent = '전체 계좌 보유 고객 및 전체 잔고 상태 기준으로 연령 분포를 표시합니다.';
+      } else {
+        const accountPart = pensionAccounts.length > 0 && crossAccounts.length > 0
+          ? `${pensionAccounts.join(', ')} 보유 고객 중 ${crossAccounts.join(', ')} 계좌를 함께 보유한 고객`
+          : pensionAccounts.length > 0
+            ? `${pensionAccounts.join(', ')} 연금 계좌 보유 고객`
+            : crossAccounts.length > 0
+              ? `연금 보유 고객 중 ${crossAccounts.join(', ')} 계좌를 함께 보유한 고객`
+              : '계좌 조건 미선택 고객';
+
+        const balancePart = balanceChecked.length > 0 ? `잔고 상태 ${balanceText}` : '잔고 상태 조건 미선택';
+        summary.textContent = `${accountPart} 또는 ${balancePart} 조건에 해당하는 고객 기준입니다.`;
+      }
+    }
+
+    document.querySelectorAll('#ageAccountFilters input, #ageBalanceFilters input').forEach(input => {
+      input.addEventListener('change', updateAgeChartByAccountFilter);
+    });
+
+    updateAgeChartByAccountFilter();
+
+    new Chart(document.getElementById('accountChart'), {
+      type: 'bar',
+      data: {
+        labels: ['월', '화', '수', '목', '금', '토', '일'],
+        datasets: [
+          {
+            label: 'IRP',
+            data: [82, 91, 106, 98, 132, 62, 71],
+            backgroundColor: navy,
+            borderRadius: 10
+          },
+          {
+            label: '개인연금저축',
+            data: [54, 68, 74, 88, 103, 45, 52],
+            backgroundColor: chartColor,
+            borderRadius: 10
+          }
+        ]
+      },
+      options: commonOptions
+    });
+
+    new Chart(document.getElementById('mpChart'), {
+      type: 'line',
+      data: {
+        labels: ['월', '화', '수', '목', '금', '토', '일'],
+        datasets: [
+          {
+            label: '신청고객',
+            data: [141, 168, 184, 192, 226, 173, 200],
+            borderColor: chartColor,
+            backgroundColor: 'rgba(37, 99, 235, 0.10)',
+            fill: true,
+            tension: 0.35
+          },
+          {
+            label: '리밸런싱 제안 도달율',
+            data: [58, 59, 61, 62, 64, 63, 64],
+            borderColor: navy,
+            tension: 0.35
+          },
+          {
+            label: '리밸런싱 실행율',
+            data: [21, 23, 24, 26, 28, 27, 28],
+            borderColor: '#16a34a',
+            tension: 0.35
+          }
+        ]
+      },
+      options: commonOptions
+    });
+
+    new Chart(document.getElementById('errorChart'), {
+      type: 'bar',
+      data: {
+        labels: ['/account/open', '/pension/order', '/mp/rebalance', '/asset/summary'],
+        datasets: [{
+          label: '오류율',
+          data: [0.46, 0.31, 0.19, 0.14],
+          backgroundColor: '#0f172a',
+          borderRadius: 10
+        }]
+      },
+      options: { ...commonOptions, indexAxis: 'y' }
+    });
+
+    const screenData = {
+      '연금 홈': {
+        kpi: ['24,102', '71,330', '38.5%', '01:42', '21.4%', '18,902', '▲ +8.2%', '▲ +11.4%', '▼ -1.1%p', '▲ +12초', '▼ -2.3%p', '▲ +9.8%'],
+        clicks: [
+          ['총 연금자산 카드', 37],
+          ['ETF 주문 바로가기', 28],
+          ['MP구독포트폴리오 배너', 19],
+          ['연금 가져오기 CTA', 16]
+        ],
+        prev: [
+          ['앱 홈', '15,442', '64.1%'],
+          ['자산 탭', '3,822', '15.9%'],
+          ['검색', '2,194', '9.1%'],
+          ['알림/푸시', '1,408', '5.8%']
+        ],
+        next: [
+          ['총 연금자산', '8,912', '37.0%'],
+          ['ETF 주문', '6,720', '27.9%'],
+          ['MP구독포트폴리오', '3,408', '14.1%'],
+          ['연금상품', '2,818', '11.7%']
+        ]
+      },
+      '연금상품': {
+        kpi: ['12,447', '30,118', '21.1%', '01:18', '33.2%', '8,304', '▲ +5.4%', '▲ +6.8%', '▲ +0.7%p', '▼ -4초', '▲ +1.2%p', '▲ +4.9%'],
+        clicks: [
+          ['인기 ETF 영역', 34],
+          ['상품 검색', 27],
+          ['테마별 상품', 22],
+          ['상품 상세 진입', 17]
+        ],
+        prev: [
+          ['연금 홈', '4,981', '40.0%'],
+          ['검색', '2,614', '21.0%'],
+          ['총 연금자산', '1,872', '15.0%'],
+          ['ETF 잔고', '1,121', '9.0%']
+        ],
+        next: [
+          ['ETF 주문', '4,233', '34.0%'],
+          ['상품 상세', '3,361', '27.0%'],
+          ['ETF 잔고', '1,494', '12.0%'],
+          ['연금 홈', '1,245', '10.0%']
+        ]
+      },
+      '총 연금자산': {
+        kpi: ['18,942', '52,181', '31.2%', '02:08', '18.9%', '14,221', '▲ +12.4%', '▲ +15.1%', '▲ +2.4%p', '▲ +21초', '▼ -3.1%p', '▲ +13.6%'],
+        clicks: [
+          ['타사 연금 상세', 31],
+          ['ETF 잔고 보기', 29],
+          ['연금 가져오기', 23],
+          ['자산 분석 카드', 17]
+        ],
+        prev: [
+          ['연금 홈', '8,912', '47.0%'],
+          ['자산 탭', '4,544', '24.0%'],
+          ['알림/푸시', '2,083', '11.0%'],
+          ['ETF 잔고', '1,515', '8.0%']
+        ],
+        next: [
+          ['ETF 잔고', '5,114', '27.0%'],
+          ['연금 가져오기', '4,356', '23.0%'],
+          ['ETF 주문', '3,220', '17.0%'],
+          ['MP구독포트폴리오', '2,273', '12.0%']
+        ]
+      },
+      'ETF 주문': {
+        kpi: ['13,820', '38,902', '24.6%', '02:34', '16.1%', '11,903', '▼ -3.2%', '▲ +2.7%', '▼ -0.8%p', '▲ +9초', '▲ +0.4%p', '▲ +1.8%'],
+        clicks: [
+          ['매수 주문', 42],
+          ['관심 ETF 등록', 21],
+          ['호가/차트 전환', 20],
+          ['주문 가능 금액 확인', 17]
+        ],
+        prev: [
+          ['연금상품', '4,233', '30.6%'],
+          ['연금 홈', '3,812', '27.6%'],
+          ['총 연금자산', '2,211', '16.0%'],
+          ['ETF 잔고', '1,756', '12.7%']
+        ],
+        next: [
+          ['주문 완료', '3,842', '27.8%'],
+          ['ETF 잔고', '3,178', '23.0%'],
+          ['연금상품', '2,349', '17.0%'],
+          ['총 연금자산', '1,935', '14.0%']
+        ]
+      },
+      'ETF 잔고': {
+        kpi: ['9,108', '22,604', '18.8%', '01:55', '24.4%', '6,820', '▲ +6.9%', '▲ +7.5%', '▲ +1.3%p', '▲ +15초', '▼ -1.6%p', '▲ +8.1%'],
+        clicks: [
+          ['종목 상세', 35],
+          ['ETF 주문', 31],
+          ['수익률 펼치기', 18],
+          ['잔고 필터', 16]
+        ],
+        prev: [
+          ['총 연금자산', '3,188', '35.0%'],
+          ['ETF 주문', '2,278', '25.0%'],
+          ['연금 홈', '1,731', '19.0%'],
+          ['연금상품', '911', '10.0%']
+        ],
+        next: [
+          ['ETF 주문', '3,097', '34.0%'],
+          ['종목 상세', '2,187', '24.0%'],
+          ['총 연금자산', '1,731', '19.0%'],
+          ['연금 홈', '911', '10.0%']
+        ]
+      },
+      '연금 가져오기': {
+        kpi: ['6,810', '14,991', '12.7%', '01:12', '41.5%', '3,215', '▲ +18.3%', '▲ +20.4%', '▲ +3.5%p', '▲ +6초', '▼ -4.2%p', '▲ +21.6%'],
+        clicks: [
+          ['가져오기 신청', 39],
+          ['사전조회 시작', 26],
+          ['제도 안내 보기', 20],
+          ['IRP 개설 연결', 15]
+        ],
+        prev: [
+          ['총 연금자산', '3,338', '49.0%'],
+          ['연금 홈', '1,702', '25.0%'],
+          ['알림/푸시', '681', '10.0%'],
+          ['계좌개설', '545', '8.0%']
+        ],
+        next: [
+          ['가져오기 신청', '2,452', '36.0%'],
+          ['연금 계좌개설', '1,430', '21.0%'],
+          ['총 연금자산', '1,158', '17.0%'],
+          ['연금 홈', '749', '11.0%']
+        ]
+      },
+      '연금 계좌개설': {
+        kpi: ['5,903', '12,391', '10.2%', '03:21', '28.7%', '2,984', '▲ +9.1%', '▲ +10.8%', '▼ -0.4%p', '▲ +34초', '▼ -1.9%p', '▲ +7.2%'],
+        clicks: [
+          ['IRP 개설 시작', 38],
+          ['개인연금저축 개설 시작', 31],
+          ['신분증 인증', 18],
+          ['개설 조건 안내', 13]
+        ],
+        prev: [
+          ['연금 홈', '1,829', '31.0%'],
+          ['연금 가져오기', '1,416', '24.0%'],
+          ['총 연금자산', '1,003', '17.0%'],
+          ['이벤트 배너', '708', '12.0%']
+        ],
+        next: [
+          ['개설 완료', '1,357', '23.0%'],
+          ['신분증 인증', '1,180', '20.0%'],
+          ['연금 홈', '885', '15.0%'],
+          ['연금 가져오기', '708', '12.0%']
+        ]
+      },
+      'MP구독포트폴리오': {
+        kpi: ['7,690', '18,441', '15.3%', '02:26', '20.1%', '5,284', '▲ +14.7%', '▲ +17.2%', '▲ +2.1%p', '▲ +28초', '▼ -2.6%p', '▲ +16.9%'],
+        clicks: [
+          ['포트폴리오 신청', 33],
+          ['리밸런싱 제안 보기', 28],
+          ['위험등급 확인', 22],
+          ['성과 상세 보기', 17]
+        ],
+        prev: [
+          ['연금 홈', '3,460', '45.0%'],
+          ['총 연금자산', '1,615', '21.0%'],
+          ['알림/푸시', '1,154', '15.0%'],
+          ['연금상품', '769', '10.0%']
+        ],
+        next: [
+          ['포트폴리오 신청 완료', '1,846', '24.0%'],
+          ['리밸런싱 제안', '1,615', '21.0%'],
+          ['ETF 주문', '1,154', '15.0%'],
+          ['총 연금자산', '1,000', '13.0%']
+        ]
+      }
+    };
+
+    function renderClickHeatmap(items) {
+      const container = document.getElementById('clickHeatmap');
+      container.innerHTML = items.map(([label, value]) => `
+        <div class="heat-item">
+          <strong>${label}</strong>
+          <div class="bar-bg"><div class="bar" style="width:${value}%"></div></div>
+          <p class="footer-note">${value}%</p>
+        </div>
+      `).join('');
+    }
+
+    function renderFlowTable(targetId, rows) {
+      const body = document.getElementById(targetId);
+      body.innerHTML = rows.map((row, idx) => `
+        <tr>
+          <td><span class="rank">${idx + 1}</span></td>
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]}</td>
+        </tr>
+      `).join('');
+    }
+
+    function updateScreen(name) {
+      const data = screenData[name];
+
+      document.getElementById('selectedScreen').textContent = name;
+      document.getElementById('screenUv').textContent = data.kpi[0];
+      document.getElementById('screenPv').textContent = data.kpi[1];
+      document.getElementById('screenCtr').textContent = data.kpi[2];
+      document.getElementById('screenTime').textContent = data.kpi[3];
+      document.getElementById('screenBounce').textContent = data.kpi[4];
+      document.getElementById('screenClicks').textContent = data.kpi[5];
+
+      const deltaMap = [
+        ['screenUvDelta', data.kpi[6]],
+        ['screenPvDelta', data.kpi[7]],
+        ['screenCtrDelta', data.kpi[8]],
+        ['screenTimeDelta', data.kpi[9]],
+        ['screenBounceDelta', data.kpi[10]],
+        ['screenClicksDelta', data.kpi[11]]
+      ];
+
+      deltaMap.forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        el.textContent = value;
+        el.classList.remove('up', 'down', 'neutral');
+        if (value.startsWith('▲')) {
+          el.classList.add('up');
+        } else if (value.startsWith('▼')) {
+          if (id === 'screenBounceDelta') {
+            el.classList.add('up');
+          } else {
+            el.classList.add('down');
+          }
+        } else {
+          el.classList.add('neutral');
+        }
+      });
+
+      renderClickHeatmap(data.clicks);
+      renderFlowTable('prevFlowBody', data.prev);
+      renderFlowTable('nextFlowBody', data.next);
+    }
+
+    document.querySelectorAll('.screen-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.screen-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        updateScreen(button.dataset.screen);
+      });
+    });
+
+    document.querySelectorAll('.nav-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const target = document.getElementById(button.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      alert('샘플 데이터가 새로고침되었습니다.');
+    });
+
+
+    function parseSortableValue(value) {
+      const text = value.trim().replace(/,/g, '');
+      const timeMatch = text.match(/(?:(\d+)일)?\s*(?:(\d+)시간)?\s*(?:(\d+)분)?/);
+      if ((text.includes('일') || text.includes('시간') || text.includes('분')) && timeMatch) {
+        const days = Number(timeMatch[1] || 0);
+        const hours = Number(timeMatch[2] || 0);
+        const minutes = Number(timeMatch[3] || 0);
+        return days * 1440 + hours * 60 + minutes;
+      }
+
+      const numeric = Number(text.replace(/[^0-9.-]/g, ''));
+      if (!Number.isNaN(numeric) && /[0-9]/.test(text)) return numeric;
+
+      return value.trim();
+    }
+
+    function enableSortableTables() {
+      document.querySelectorAll('table').forEach(table => {
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((th, index) => {
+          th.classList.add('sortable');
+          th.addEventListener('click', () => {
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            const currentDirection = th.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+            headers.forEach(header => {
+              header.classList.remove('sort-asc', 'sort-desc');
+              delete header.dataset.sortDirection;
+            });
+            th.dataset.sortDirection = currentDirection;
+            th.classList.add(currentDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+              const aValue = parseSortableValue(a.children[index]?.innerText || '');
+              const bValue = parseSortableValue(b.children[index]?.innerText || '');
+
+              if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return currentDirection === 'asc' ? aValue - bValue : bValue - aValue;
+              }
+
+              return currentDirection === 'asc'
+                ? String(aValue).localeCompare(String(bValue), 'ko')
+                : String(bValue).localeCompare(String(aValue), 'ko');
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+          });
+        });
+      });
+    }
+
+    enableSortableTables();
+
+    updateScreen('연금 홈');
+  </script>
+</body>
+</html>
