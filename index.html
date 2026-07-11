@@ -740,7 +740,7 @@
         <div class="topbar">
           <div>
             <h1>한국투자 MTS 연금 서비스 운영 현황</h1>
-            <p class="subtitle">방문, 거래, 계좌개설, MP구독포트폴리오, 오류 데이터를 한 화면에서 모니터링합니다.</p>
+            <p class="subtitle">방문, 거래, 계좌개설, 로보포트폴리오, 오류 데이터를 한 화면에서 모니터링합니다.</p>
           </div>
         </div>
 
@@ -879,7 +879,7 @@
                 <tr><td><span class="rank">3</span></td><td>ETF 주문</td><td>13,820</td><td>38,902</td><td>24.6%</td></tr>
                 <tr><td><span class="rank">4</span></td><td>연금상품</td><td>12,447</td><td>30,118</td><td>21.1%</td></tr>
                 <tr><td><span class="rank">5</span></td><td>ETF 잔고</td><td>9,108</td><td>22,604</td><td>18.8%</td></tr>
-                <tr><td><span class="rank">6</span></td><td>MP구독포트폴리오</td><td>7,690</td><td>18,441</td><td>15.3%</td></tr>
+                <tr><td><span class="rank">6</span></td><td>로보포트폴리오</td><td>7,690</td><td>18,441</td><td>15.3%</td></tr>
                 <tr><td><span class="rank">7</span></td><td>연금 가져오기</td><td>6,810</td><td>14,991</td><td>12.7%</td></tr>
               </tbody>
             </table>
@@ -896,7 +896,7 @@
           <button class="screen-btn" data-screen="ETF 잔고">ETF 잔고</button>
           <button class="screen-btn" data-screen="연금 가져오기">연금 가져오기</button>
           <button class="screen-btn" data-screen="연금 계좌개설">연금 계좌개설</button>
-          <button class="screen-btn" data-screen="MP구독포트폴리오">MP구독포트폴리오</button>
+          <button class="screen-btn" data-screen="로보포트폴리오">로보포트폴리오</button>
         </div>
 
         <div class="card section">
@@ -1039,7 +1039,7 @@
       <section id="mp" class="card section mp-section">
         <div class="section-header">
           <div>
-            <h2 class="section-title">MP구독포트폴리오 운영 지표</h2>
+            <h2 class="section-title">로보포트폴리오 운영 지표</h2>
             <p class="subtitle" style="margin-top:6px;">신청고객, 총 가입 고객수, 리밸런싱 제안 도달 및 실행 흐름을 한 박스에서 확인합니다.</p>
           </div>
           <span class="badge">MP 지표</span>
@@ -1047,7 +1047,7 @@
 
         <div class="grid-kpi mp-kpi in-card">
           <div class="kpi">
-            <div class="kpi-label">MP구독포트폴리오 신청고객</div>
+            <div class="kpi-label">로보포트폴리오 신청고객</div>
             <div class="kpi-value">1,284</div>
             <div class="kpi-change up">▲ 9.8%</div>
           </div>
@@ -1175,7 +1175,7 @@
               <tbody>
                 <tr><td>13:00</td><td>ETF 주문</td><td>/pension/order</td><td>0.31%</td><td><span class="status-dot orange-bg"></span>주의</td></tr>
                 <tr><td>12:00</td><td>총 연금자산</td><td>/asset/summary</td><td>0.14%</td><td><span class="status-dot green-bg"></span>정상</td></tr>
-                <tr><td>11:00</td><td>MP구독포트폴리오</td><td>/mp/rebalance</td><td>0.19%</td><td><span class="status-dot green-bg"></span>정상</td></tr>
+                <tr><td>11:00</td><td>로보포트폴리오</td><td>/mp/rebalance</td><td>0.19%</td><td><span class="status-dot green-bg"></span>정상</td></tr>
                 <tr><td>10:00</td><td>계좌개설</td><td>/account/open</td><td>0.46%</td><td><span class="status-dot orange-bg"></span>주의</td></tr>
               </tbody>
             </table>
@@ -1542,7 +1542,7 @@
         clicks: [
           ['총 연금자산 카드', 37],
           ['ETF 주문 바로가기', 28],
-          ['MP구독포트폴리오 배너', 19],
+          ['로보포트폴리오 배너', 19],
           ['연금 가져오기 CTA', 16]
         ],
         prev: [
@@ -1554,7 +1554,7 @@
         next: [
           ['총 연금자산', '8,912', '37.0%'],
           ['ETF 주문', '6,720', '27.9%'],
-          ['MP구독포트폴리오', '3,408', '14.1%'],
+          ['로보포트폴리오', '3,408', '14.1%'],
           ['연금상품', '2,818', '11.7%']
         ]
       },
@@ -1597,7 +1597,7 @@
           ['ETF 잔고', '5,114', '27.0%'],
           ['연금 가져오기', '4,356', '23.0%'],
           ['ETF 주문', '3,220', '17.0%'],
-          ['MP구독포트폴리오', '2,273', '12.0%']
+          ['로보포트폴리오', '2,273', '12.0%']
         ]
       },
       'ETF 주문': {
@@ -1684,7 +1684,7 @@
           ['연금 가져오기', '708', '12.0%']
         ]
       },
-      'MP구독포트폴리오': {
+      '로보포트폴리오': {
         kpi: ['7,690', '18,441', '15.3%', '02:26', '20.1%', '5,284', '▲ +14.7%', '▲ +17.2%', '▲ +2.1%p', '▲ +28초', '▼ -2.6%p', '▲ +16.9%'],
         clicks: [
           ['포트폴리오 신청', 33],
